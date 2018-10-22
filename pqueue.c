@@ -99,4 +99,23 @@ extract_process(pqueue *rdqueue, process *p)
     heapify(rdqueue, 0);
 }
 
+process*
+process_init(int pid_v, int et_v, int period_v, int deadline_v)
+{
+    process *temp = (process*)malloc(sizeof(process));
+    temp->pid = pid_v;
+    temp->et = et_v;
+    temp->period = period_v;
+    temp->deadline = deadline_v;
+    return temp;
+}
+
+pqueue *
+pqueue_init(int process_count, int capacity)
+{
+    pqueue *pq = (pqueue *)malloc(sizeof(pqueue));
+    pq->ready = (process**)malloc(process_count * sizeof(process *));
+    pq->pq_capacity = capacity;
+    pq->pq_size = 0;
+}
 

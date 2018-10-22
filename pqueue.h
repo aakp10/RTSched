@@ -27,5 +27,6 @@ void extract_process(pqueue *rdqueue, process *p);
 void dec_priority(pqueue *rdqueue, process *p);
 //getmax
 process *get_max(pqueue *rdqueue);
-
+process *process_init(int pid_v, int et_v, int period_v, int deadline_v);
+pqueue *pqueue_init(int process_count, int capacity);
 #endif
