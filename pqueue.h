@@ -20,13 +20,14 @@ struct pqueue{
 };
 
 //insert
-void insert_process(pqueue *rdqueue, process *p);
+void pqueue_insert_process(pqueue *rdqueue, process *p);
 //delete
-void extract_process(pqueue *rdqueue, process *p);
+void pqueue_extract_process(pqueue *rdqueue, process *p);
 //decrease priority
-void dec_priority(pqueue *rdqueue, process *p);
+void pqueue_dec_priority(pqueue *rdqueue, process *p);
 //getmax
-process *get_max(pqueue *rdqueue);
+process *pqueue_get_max(pqueue *rdqueue);
 process *process_init(int pid_v, int et_v, int period_v, int deadline_v);
 pqueue *pqueue_init(int process_count, int capacity);
+void pqueue_display_process(pqueue *pq);
 #endif
