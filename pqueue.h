@@ -10,6 +10,7 @@ struct process{
     int period;
     int deadline;
     int priority;
+    int slack;
 };
 
 typedef struct pqueue pqueue;
@@ -28,7 +29,7 @@ void pqueue_extract_process(pqueue *rdqueue, process *p);
 void pqueue_dec_priority(pqueue *rdqueue, process *p, int index, int delta);
 //getmax
 process *pqueue_get_max(pqueue *rdqueue);
-process *process_init(int pid_v, int et_v, int period_v, int deadline_v);
+process *process_init(int pid_v, int et_v, int period_v, int deadline_v, int priority_v);
 pqueue *pqueue_init(int process_count, int capacity);
 void pqueue_display_process(pqueue *pq);
 #endif

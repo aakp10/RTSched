@@ -63,7 +63,7 @@ int main()
     {
         int pid, et, period, deadline;
         scanf("%d %d %d", &et, &period, &deadline);
-        process *p = process_init(i+1, et, period, deadline);
+        process *p = process_init(i+1, et, period, deadline, deadline);
         global_processes[i] = p;
         pqueue_insert_process(ready_queue, p);
         i++;

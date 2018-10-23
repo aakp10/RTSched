@@ -131,7 +131,7 @@ pqueue_display_process(pqueue *pq)
 }
 
 process*
-process_init(int pid_v, int et_v, int period_v, int deadline_v)
+process_init(int pid_v, int et_v, int period_v, int deadline_v, int priority_v)
 {
     process *temp = (process*)malloc(sizeof(process));
     temp->pid = pid_v;
@@ -139,7 +139,7 @@ process_init(int pid_v, int et_v, int period_v, int deadline_v)
     temp->ret = et_v;
     temp->period = period_v;
     temp->deadline = deadline_v;
-    temp->priority = deadline_v;
+    temp->priority = priority_v;
     return temp;
 }
 
