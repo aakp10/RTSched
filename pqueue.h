@@ -6,6 +6,7 @@ typedef struct process process;
 struct process{
     int pid;
     int et;
+    int ret;
     int period;
     int deadline;
     int priority;
@@ -24,7 +25,7 @@ void pqueue_insert_process(pqueue *rdqueue, process *p);
 //delete
 void pqueue_extract_process(pqueue *rdqueue, process *p);
 //decrease priority
-void pqueue_dec_priority(pqueue *rdqueue, process *p);
+void pqueue_dec_priority(pqueue *rdqueue, process *p, int index, int delta);
 //getmax
 process *pqueue_get_max(pqueue *rdqueue);
 process *process_init(int pid_v, int et_v, int period_v, int deadline_v);

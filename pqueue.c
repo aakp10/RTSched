@@ -115,6 +115,13 @@ pqueue_extract_process(pqueue *rdqueue, process *p)
 }
 
 void
+pqueue_dec_priority(pqueue *rdqueue, process *p, int index, int delta)
+{
+    p->priority += delta;
+    pqueue_heapify(rdqueue, index);
+}
+
+void
 pqueue_display_process(pqueue *pq)
 {
     for(int i = 0; i < pq->pq_size; i++)
@@ -129,6 +136,7 @@ process_init(int pid_v, int et_v, int period_v, int deadline_v)
     process *temp = (process*)malloc(sizeof(process));
     temp->pid = pid_v;
     temp->et = et_v;
+    temp->ret = et_v;
     temp->period = period_v;
     temp->deadline = deadline_v;
     temp->priority = deadline_v;

@@ -25,6 +25,32 @@ int get_lcm(int nproc)
     return hyper_period;
 }
 
+void
+schedule_edf(pqueue *rdqueue, int nproc, int hyperperiod)
+{
+    //execute until 1 hyperperiod
+    int cur_time = 0;
+    int prev_pid = -1;
+    while(cur_time <= hyperperiod)
+   {
+       process *cur_proc = pqueue_get_max(rdqueue);
+       if(cur_proc->pid != prev_pid) {
+            printf("time:%d process executing: %d\n", cur_time, cur_proc->pid);
+            prev_pid = cur_proc->pid;
+        }
+        //insert release time all the getmax priority 
+        //execute for 1 cycle
+        cur_time++;
+        //change ret
+        cur_proc->ret--;
+        if(cur_proc->ret == 0)
+        {
+            cur_proc->ret =  cur_proc->et;
+            pqueue_dec_priority(rdqueue, cur_proc, 0, cur_proc->period + (cur_proc->period - cur_proc->deadline));
+        }
+        //once ret == et change the deadline to + hyperperiod
+   } 
+}
 
 int main()
 {
@@ -44,5 +70,6 @@ int main()
     }
     pqueue_display_process(ready_queue);
     printf("%d", get_lcm(process_count));
+    schedule_edf(ready_queue, process_count, get_lcm(process_count));
     return 0;
 }
