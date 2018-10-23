@@ -58,6 +58,11 @@ bubble_up(pqueue *rdqueue)
 void
 pqueue_insert_process(pqueue *rdqueue, process *p)
 {
+    //search in rdqueue
+    for(int i = 0; i < rdqueue->pq_size; i++)
+        if(rdqueue->ready[i]->pid == p->pid)
+            return;
+
     int ins_pos = get_insert_pos(rdqueue);
     if(ins_pos == rdqueue->pq_capacity ) {
         perror("Process limit exceeded\n");
@@ -111,6 +116,7 @@ pqueue_extract_process(pqueue *rdqueue, process *p)
         return;
     }
     rdqueue->ready[0] = rdqueue->ready[process_count - 1];
+    rdqueue->pq_size--;
     pqueue_heapify(rdqueue, 0);
 }
 
