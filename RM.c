@@ -56,17 +56,19 @@ schedule_rm(pqueue *rdqueue, int nproc, int hyperperiod)
         if(cur_proc) {
             printf("time:%d process executing: %d\n", cur_time, cur_proc->pid);
             //insert release time all the getmax priority 
-            //execute for 1 cycle
-            cur_time++;
+
             //change ret
             cur_proc->ret--;
+            global_processes[cur_proc->pid-1]->ret--;
             if(cur_proc->ret == 0)
+            {
                 pqueue_extract_process(rdqueue, cur_proc);
+            }
+                
             //once ret == et change the deadline to + hyperperiod
         }
-        else{
-            cur_time++;
-        }
+        //execute for 1 cycle
+        cur_time++;
    }
 }
 

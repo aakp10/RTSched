@@ -25,6 +25,24 @@ int get_lcm(int nproc)
     return hyper_period;
 }
 
+static void
+check_arrivals(pqueue *rdqueue, int cur_time, int nproc)
+{
+    for(int i = 0; i < nproc; i++)
+    {
+        if(!global_processes[i]->ret && global_processes[i]->deadline/*period*/ <= cur_time)
+        {
+            global_processes[i]->ret = global_processes[i]->et;
+            global_processes[i]->deadline += global_processes[i]->deadline;
+            process *p = process_init(i+1, global_processes[i]->et, global_processes[i]->period, 
+                                global_processes[i]->deadline, global_processes[i]->period);
+            //FIXME :recreate the process this is reinsertion.
+            pqueue_insert_process(rdqueue, p);
+        }
+    }
+    //pqueue_display_process(rdqueue);
+}
+
 void
 schedule_edf(pqueue *rdqueue, int nproc, int hyperperiod)
 {
@@ -33,23 +51,24 @@ schedule_edf(pqueue *rdqueue, int nproc, int hyperperiod)
     int prev_pid = -1;
     while(cur_time <= hyperperiod)
    {
-       process *cur_proc = pqueue_get_max(rdqueue);
-       if(cur_proc->pid != prev_pid) {
+        check_arrivals(rdqueue, cur_time, nproc);
+        process *cur_proc = pqueue_get_max(rdqueue);
+        if(cur_proc) {
             printf("time:%d process executing: %d\n", cur_time, cur_proc->pid);
-            prev_pid = cur_proc->pid;
+            //insert release time all the getmax priority 
+            //change ret
+            cur_proc->ret--;
+            if(cur_proc->ret == 0)
+            {
+                global_processes[cur_proc->pid - 1]->ret = 0;
+                pqueue_extract_process(rdqueue, cur_proc);
+            }
+                
         }
-        //insert release time all the getmax priority 
         //execute for 1 cycle
         cur_time++;
-        //change ret
-        cur_proc->ret--;
-        if(cur_proc->ret == 0)
-        {
-            cur_proc->ret =  cur_proc->et;
-            pqueue_dec_priority(rdqueue, cur_proc, 0, cur_proc->period + (cur_proc->period - cur_proc->deadline));
-        }
         //once ret == et change the deadline to + hyperperiod
-   } 
+   }
 }
 
 int main()
