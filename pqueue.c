@@ -130,10 +130,15 @@ pqueue_dec_priority(pqueue *rdqueue, process *p, int index, int delta)
 void
 pqueue_display_process(pqueue *pq)
 {
+    printf("READY PROCESSES\n");
+    if(pqueue_get_max(pq))
+        printf("HIGHEST PRIORITY pid:%d deadline:%d\n", pqueue_get_max(pq)->pid, pqueue_get_max(pq)->deadline);
     for(int i = 0; i < pq->pq_size; i++)
     {
         printf("pid:%d deadline:%d\n", pq->ready[i]->pid, pq->ready[i]->deadline);
     }
+    printf("END\n");
+
 }
 
 process*
