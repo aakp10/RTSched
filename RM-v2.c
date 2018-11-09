@@ -72,32 +72,31 @@ schedule_rm(pqueue *rdqueue, int nproc, int hyperperiod)
    }
 }
 
-void
-submit_processes(int process_count, pqueue *ready_queue)
+pqueue *
+submit_processes()
 {
-    int i  = 0;
-    while(i < process_count)
+    FILE *task_file = fopen("tasks", "r");
+    int wcet, period, deadline;
+    int task_no = 0;
+    int process_count;
+    fscanf(task_file,"%d", &process_count);
+    pqueue *ready_queue = pqueue_init(process_count, MAXPROCESS);
+    global_tasks = (task**)malloc(process_count * sizeof(task*));
+    //wcet, period, deadline
+    while(fscanf(task_file, "%d, %d, %d", &wcet, &period, &deadline) == 3)
     {
-        int pid, et, period, deadline;
-        //FIXME: arrival time.
-        //input for a task. 
-        scanf("%d %d %d", &et, &period, &deadline);
-        task *t = task_init(et, period, deadline);
-        process *p = process_init(pid_count++, et, period, i);
+        task *t = task_init(wcet, period, deadline);
+        process *p = process_init(pid_count++, et, period, ++i);
         task_submit_job(t, p);
         global_tasks[i] = p;
         pqueue_insert_process(ready_queue, p);
-        i++;
     }
+    return ready_queue;
 }
 
 int main()
 {
-    int process_count;
-    scanf("%d",&process_count);
-    pqueue *ready_queue = pqueue_init(process_count, MAXPROCESS);
-    global_tasks = (task**)malloc(process_count * sizeof(task*));
-    submit_processes(process_count, ready_queue);
+    pqueue *ready_queue = submit_processes();
     pqueue_display_process(ready_queue);
     printf("%d", get_lcm(process_count));
     schedule_rm(ready_queue, process_count, get_lcm(process_count));
