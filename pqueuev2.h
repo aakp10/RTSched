@@ -12,27 +12,33 @@ struct jobs{
 
 typedef struct task task;
 struct task{
-    int et;
+    int wcet;
     int period;
     int deadline;
+    //this will just be 1 job per task at a given instance in the ready queue
     jobs *job_list;
 };
 
 struct process{
     int pid;
+    //to map the job to task
     int task_id;
-    //FIXME int wcet;
+    //actual execution time of this job
     int aet;
+    //apriori known as a part of the temporal parameters of the tasks.
     int wcet;
+    //current priority : @t=0- assigned; @t=t- current
     int priority;
+    //used in sched policies dynamically assigning current prio based upon slack
     int slack;
 };
 
 typedef struct pqueue pqueue;
 struct pqueue{
-    //note this
     process **ready;
+    //depends upon the initial task submission
     int pq_capacity;
+    //jobs in ready queue
     int pq_size;
 };
 
