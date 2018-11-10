@@ -143,14 +143,14 @@ pqueue_display_process(pqueue *pq)
 }
 
 int
-get_aet(int wcet)
+get_aet(int wcet, int pid)
 {
     //simulation hack to generate actual execution time between 0 and wcet
     //aet is biased towards wcet/2 + rand()
     //seed set depending upon the current paramaters when the job is submitted to ready queue
     time_t cur_time;
-    srand(time(&cur_time));
-    return (rand() % (wcet/2 + 1)) + wcet/2;
+    srand(time(&cur_time) + pid);
+    return (wcet - (rand() % (wcet/2 + 1))/2);
 }
 
 process*
@@ -163,7 +163,7 @@ process_init(int pid_v, int wcet_v, int priority_v, int task_id, task *task_ref)
     temp->priority = priority_v;
     // NOTE: Sorry but FUTURE can't be predicted.
     // hence, resort to a random hacky actual exec time generator.
-    temp->aet = get_aet(wcet_v);
+    temp->aet = get_aet(wcet_v, pid_v);
     temp->ret = temp->aet;
     temp->task_ref = task_ref;
     return temp;

@@ -56,14 +56,21 @@ schedule_rm(pqueue *rdqueue, int nproc, int hyperperiod)
        check_arrivals(rdqueue, cur_time, nproc);
        process *cur_proc = pqueue_get_max(rdqueue);
         if(cur_proc) {
-            printf("time:%d process executing: %d\n", cur_time, cur_proc->pid);
+            FILE *schedule_file = fopen("schedule.txt", "a+");
+            fprintf(schedule_file, "time:%d process executing: %d actual execution time = %d\n", cur_time, cur_proc->pid, cur_proc->aet);
+            printf("time:%d process executing: %d actual execution time = %d\n", cur_time, cur_proc->pid, cur_proc->aet);
+            
             //insert release time all the getmax priority 
-
+            fclose(schedule_file);
             //change ret
             cur_proc->ret--;
             //global_task[cur_proc->pid-1]->ret--;
             if(cur_proc->ret == 0)
             {
+                //log the aet of this job
+                FILE *log_file = fopen("sched-op.txt", "a+");
+                fprintf(log_file, "task: %d pid:%d aet: %d\n", cur_proc->task_id, cur_proc->pid, cur_proc->aet);
+                fclose(log_file);
                 pqueue_extract_process(rdqueue, cur_proc);
                 //unlink from job lists
                 remove_job(cur_proc->task_ref, cur_proc);
@@ -95,6 +102,7 @@ submit_processes()
         global_tasks[task_no++] = t;
         pqueue_insert_process(ready_queue, p);
     }
+    fclose(task_file);
     return ready_queue;
 }
 
