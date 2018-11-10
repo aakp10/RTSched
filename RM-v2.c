@@ -65,6 +65,8 @@ schedule_rm(pqueue *rdqueue, int nproc, int hyperperiod)
             if(cur_proc->ret == 0)
             {
                 pqueue_extract_process(rdqueue, cur_proc);
+                //unlink from job lists
+                remove_job(cur_proc->task_ref, cur_proc);
             }
                 
             //once ret == et change the deadline to + hyperperiod

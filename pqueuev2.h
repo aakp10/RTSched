@@ -60,4 +60,5 @@ pqueue *pqueue_init(int process_count, int capacity);
 void pqueue_display_process(pqueue *pq);
 void task_submit_job(task *cur_task, process *proc);
 task *task_init(int task_id, int et, int period, int deadline);
+void remove_job(task *t, process *p);
 #endif

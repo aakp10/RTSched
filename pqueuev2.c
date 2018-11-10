@@ -199,3 +199,24 @@ task_submit_job(task *cur_task, process *proc)
     temp_job->next_job = cur_task->job_list;
     cur_task->job_list = temp_job;
 }
+
+void
+remove_job(task *t, process *p)
+{
+    //iterate in the job list of the task
+    jobs *job_list = t->job_list;
+    jobs *prev = NULL;
+    while(job_list != NULL)
+    {
+        if(job_list->cur_proc == p) {
+            if(prev)
+                prev->next_job = job_list->next_job;
+            else
+                t->job_list = job_list->next_job;
+            free(job_list);
+            break;
+        }
+        prev = job_list;
+        job_list = job_list->next_job;
+    }
+}
