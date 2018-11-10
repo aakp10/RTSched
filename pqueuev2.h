@@ -12,8 +12,10 @@ struct jobs{
 
 typedef struct task task;
 struct task{
+    int task_id;
     int wcet;
     int period;
+    //absolute deadline
     int deadline;
     //this will just be 1 job per task at a given instance in the ready queue
     jobs *job_list;
@@ -27,10 +29,13 @@ struct process{
     int aet;
     //apriori known as a part of the temporal parameters of the tasks.
     int wcet;
+    //remaining execution time
+    int ret;
     //current priority : @t=0- assigned; @t=t- current
     int priority;
     //used in sched policies dynamically assigning current prio based upon slack
     int slack;
+    task *task_ref;
 };
 
 typedef struct pqueue pqueue;
@@ -50,9 +55,9 @@ void pqueue_extract_process(pqueue *rdqueue, process *p);
 void pqueue_dec_priority(pqueue *rdqueue, process *p, int index, int delta);
 //getmax
 process *pqueue_get_max(pqueue *rdqueue);
-process *process_init(int pid_v, int et_v, int priority_v, int task_id);
+process *process_init(int pid_v, int wcet_v, int priority_v, int task_id, task *task_ref);
 pqueue *pqueue_init(int process_count, int capacity);
 void pqueue_display_process(pqueue *pq);
 void task_submit_job(task *cur_task, process *proc);
-task *task_init(int et, int period, int deadline);
+task *task_init(int task_id, int et, int period, int deadline);
 #endif

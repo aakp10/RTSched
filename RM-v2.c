@@ -4,7 +4,8 @@
 
 #define MAXPROCESS 100
 task **global_tasks;
-static pid_count = 0;
+static int pid_count = 0;
+static int task_count = 0;
 int
 get_gcd(int num1, int num2)
 {
@@ -13,12 +14,12 @@ get_gcd(int num1, int num2)
     return get_gcd(num2, num1%num2);
 }
 
-int get_lcm(int nproc)
+int get_lcm()
 {
     int hyper_period = 1;
-    for(int i = 0; i < nproc; i++)
+    for(int i = 0; i < task_count; i++)
     {
-        process *p2 = global_processes[i];
+        task *p2 = global_tasks[i];
         //printf("%d, ", p2->period);
         hyper_period = (hyper_period * p2->period)/get_gcd(hyper_period, p2->period);
     }
@@ -30,13 +31,14 @@ check_arrivals(pqueue *rdqueue, int cur_time, int nproc)
 {
     for(int i = 0; i < nproc; i++)
     {
-        if(!global_processes[i]->ret && global_processes[i]->deadline/*period*/ <= cur_time)
+        if(global_tasks[i]->job_list == NULL && global_tasks[i]->deadline/*period*/ <= cur_time)
         {
-            global_processes[i]->ret = global_processes[i]->et;
-            global_processes[i]->deadline += global_processes[i]->deadline;
-            process *p = process_init(i+1, global_processes[i]->et, global_processes[i]->period, 
-                                global_processes[i]->deadline, global_processes[i]->period);
+            //global_processes[i]->ret = global_processes[i]->et;
+            global_tasks[i]->deadline += global_tasks[i]->deadline;
+            process *p = process_init(pid_count++, global_tasks[i]->wcet, global_tasks[i]->period, global_tasks[i]->task_id, global_tasks[i]);
             //FIXME :recreate the process this is reinsertion.
+            //enqueue into the job_list
+            task_submit_job(global_tasks[i], p);
             pqueue_insert_process(rdqueue, p);
         }
     }
@@ -85,10 +87,10 @@ submit_processes()
     //wcet, period, deadline
     while(fscanf(task_file, "%d, %d, %d", &wcet, &period, &deadline) == 3)
     {
-        task *t = task_init(wcet, period, deadline);
-        process *p = process_init(pid_count++, et, period, ++i);
+        task *t = task_init(task_count++, wcet, period, deadline);
+        process *p = process_init(pid_count++, wcet, period, task_count, t);
         task_submit_job(t, p);
-        global_tasks[i] = p;
+        global_tasks[task_no++] = t;
         pqueue_insert_process(ready_queue, p);
     }
     return ready_queue;
@@ -98,7 +100,7 @@ int main()
 {
     pqueue *ready_queue = submit_processes();
     pqueue_display_process(ready_queue);
-    printf("%d", get_lcm(process_count));
-    schedule_rm(ready_queue, process_count, get_lcm(process_count));
+    printf("%d", get_lcm());
+    schedule_rm(ready_queue, task_count, get_lcm());
     return 0;
 }

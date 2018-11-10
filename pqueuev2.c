@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "pqueuev2.h"
 
 static int
@@ -132,10 +133,10 @@ pqueue_display_process(pqueue *pq)
 {
     printf("READY PROCESSES\n");
     if(pqueue_get_max(pq))
-        printf("HIGHEST PRIORITY pid:%d deadline:%d\n", pqueue_get_max(pq)->pid, pqueue_get_max(pq)->deadline);
+        printf("HIGHEST PRIORITY pid:%d deadline:%d\n", pqueue_get_max(pq)->pid, pqueue_get_max(pq)->task_ref->deadline);
     for(int i = 0; i < pq->pq_size; i++)
     {
-        printf("pid:%d deadline:%d\n", pq->ready[i]->pid, pq->ready[i]->deadline);
+        printf("pid:%d deadline:%d\n", pq->ready[i]->pid, pq->ready[i]->task_ref->deadline);
     }
     printf("END\n");
 
@@ -147,14 +148,14 @@ get_aet(int wcet)
     //simulation hack to generate actual execution time between 0 and wcet
     //aet is biased towards wcet/2 + rand()
     //seed set depending upon the current paramaters when the job is submitted to ready queue
+    time_t cur_time;
     srand(time(&cur_time));
     return (rand() % (wcet/2 + 1)) + wcet/2;
 }
 
 process*
-process_init(int pid_v, int wcet_v, int priority_v, int task_id)
+process_init(int pid_v, int wcet_v, int priority_v, int task_id, task *task_ref)
 {
-    time_t cur_time;
     process *temp = (process*)malloc(sizeof(process));
     temp->task_id = task_id;
     temp->pid = pid_v;
@@ -162,7 +163,9 @@ process_init(int pid_v, int wcet_v, int priority_v, int task_id)
     temp->priority = priority_v;
     // NOTE: Sorry but FUTURE can't be predicted.
     // hence, resort to a random hacky actual exec time generator.
-    temp->aet = get_aet();
+    temp->aet = get_aet(wcet_v);
+    temp->ret = temp->aet;
+    temp->task_ref = task_ref;
     return temp;
 }
 
@@ -177,13 +180,15 @@ pqueue_init(int process_count, int capacity)
 }
 
 task*
-task_init(int et, int period, int deadline)
+task_init(int task_id, int wcet, int period, int deadline)
 {
     task *temp = (task*)malloc(sizeof(task));
-    temp->et = et;
+    temp->task_id = task_id;
+    temp->wcet = wcet;
     temp->period = period;
     temp->deadline = deadline;
     temp->job_list = NULL;
+    return temp;
 }
 
 void
