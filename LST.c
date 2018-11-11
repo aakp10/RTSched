@@ -31,14 +31,15 @@ static void
 update_slack(pqueue *rdqueue, int nproc, int cur_time)
 {
     //FIXME
-    /*int prev_slack;
+    int prev_slack;
     //printf("UPDATION\n");
+    process** ready = rdqueue->ready;
     for(int i = 0; i < nproc; i++)
     {
-        process *cur_proc = global_tasks[i];
+        process *cur_proc = ready[i];
         prev_slack = cur_proc->slack;
         
-        cur_proc->slack = cur_proc->deadline - cur_time - cur_proc->ret;
+        cur_proc->slack = cur_proc->task_ref->deadline - cur_time - cur_proc->ret;
         if(cur_proc->slack != prev_slack)
         {
             pqueue_dec_priority(rdqueue, cur_proc, i, cur_proc->slack - cur_proc->priority);
@@ -46,7 +47,6 @@ update_slack(pqueue *rdqueue, int nproc, int cur_time)
         //printf("pid:%d priority: %d slack %d \n", cur_proc->pid, cur_proc->priority, cur_proc->slack);
     }
     //printf("END\n");
-    */
 }
 
 void
@@ -70,7 +70,7 @@ schedule_lst(pqueue *rdqueue, int nproc, int hyperperiod)
         }
         //update slacks
         cur_time++;
-        update_slack(rdqueue, task_count, cur_time);   
+        update_slack(rdqueue, rdqueue->pq_size, cur_time);   
     }
 
 }

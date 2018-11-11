@@ -50,7 +50,7 @@ schedule_edf(pqueue *rdqueue, int nproc, int hyperperiod)
     //execute until 1 hyperperiod
     int cur_time = 0;
     while(cur_time <= hyperperiod)
-   {
+    {
         check_arrivals(rdqueue, cur_time, nproc);
         process *cur_proc = pqueue_get_max(rdqueue);
         if(cur_proc) {

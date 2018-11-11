@@ -35,7 +35,8 @@ check_arrivals(pqueue *rdqueue, int cur_time, int nproc)
         {
             //global_processes[i]->ret = global_processes[i]->et;
             global_tasks[i]->deadline += global_tasks[i]->deadline;
-            process *p = process_init(pid_count++, global_tasks[i]->wcet, global_tasks[i]->period, global_tasks[i]->task_id, global_tasks[i]);
+            process *p = process_init(pid_count++, global_tasks[i]->wcet,
+                             global_tasks[i]->period, global_tasks[i]->task_id, global_tasks[i]);
             //FIXME :recreate the process this is reinsertion.
             //enqueue into the job_list
             task_submit_job(global_tasks[i], p);
