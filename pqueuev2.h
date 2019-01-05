@@ -49,7 +49,7 @@ struct pqueue{
 
 // some helpers
 
-int get_next_child(pqueue *rdqueue, int root_index);
+process* get_next_child(pqueue *rdqueue, int root_index);
 //insert
 void pqueue_insert_process(pqueue *rdqueue, process *p);
 //delete

@@ -15,7 +15,7 @@ get_lchild(pqueue *rdqueue, int root_index)
     return (2*root_index + 1);
 }
 
-int
+process*
 get_next_child(pqueue *rdqueue, int root_index)
 {
     int l_child = get_lchild(rdqueue, root_index);
