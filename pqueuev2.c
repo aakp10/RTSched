@@ -15,6 +15,15 @@ get_lchild(pqueue *rdqueue, int root_index)
     return (2*root_index + 1);
 }
 
+int
+get_next_child(pqueue *rdqueue, int root_index)
+{
+    int l_child = get_lchild(rdqueue, root_index);
+    int r_child = get_rchild(rdqueue, root_index);
+    return rdqueue->ready[l_child]->priority < rdqueue->ready[r_child]->priority ?
+                        return rdqueue->ready[l_child] : rdqueue->ready[r_child];
+}
+
 static int
 get_parent(pqueue *rdqueue, int child_index)
 {

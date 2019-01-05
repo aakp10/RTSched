@@ -47,6 +47,9 @@ struct pqueue{
     int pq_size;
 };
 
+// some helpers
+
+int get_next_child(pqueue *rdqueue, int root_index);
 //insert
 void pqueue_insert_process(pqueue *rdqueue, process *p);
 //delete
