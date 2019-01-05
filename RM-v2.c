@@ -63,8 +63,12 @@ schedule_rm(pqueue *rdqueue, int nproc, int hyperperiod)
             
             //insert release time all the getmax priority 
             fclose(schedule_file);
-            //change ret
-            cur_proc->ret--;
+            process *next_proc = get_next_child(rdqueue, 0);
+            // if next_proc exists
+            if(next_proc) {
+                cur_time += cur_proc->ret;
+                cur_proc->ret -= cur_proc->ret;
+            }
             //global_task[cur_proc->pid-1]->ret--;
             if(cur_proc->ret == 0)
             {
@@ -76,7 +80,6 @@ schedule_rm(pqueue *rdqueue, int nproc, int hyperperiod)
                 //unlink from job lists
                 remove_job(cur_proc->task_ref, cur_proc);
             }
-                
             //once ret == et change the deadline to + hyperperiod
         }
         //execute for 1 cycle
