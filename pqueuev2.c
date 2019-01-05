@@ -20,6 +20,10 @@ get_next_child(pqueue *rdqueue, int root_index)
 {
     int l_child = get_lchild(rdqueue, root_index);
     int r_child = get_rchild(rdqueue, root_index);
+    if (l_child > rdqueue->pq_size - 1)
+        return NULL;
+    else if(r_child == rdqueue->pq_size)
+        return rdqueue->ready[l_child];
     return rdqueue->ready[l_child]->priority < rdqueue->ready[r_child]->priority ?
                         return rdqueue->ready[l_child] : rdqueue->ready[r_child];
 }
