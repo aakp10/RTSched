@@ -55,10 +55,26 @@ schedule_lst(pqueue *rdqueue, int nproc, int hyperperiod)
     int cur_time = 0;
     while(cur_time <= hyperperiod)
     {
+        /**
+        * FIXME: new arrivals
+        */
+
         process *cur_proc = pqueue_get_max(rdqueue);
         if(cur_proc) {
             printf("time:%d process executing: %d\n", cur_time, cur_proc->pid);
-            cur_proc->ret--;
+            //find the next least slack time job
+            process *next_proc = get_next_child(rdqueue, 0);
+            //Processor claimed by the job for ∆ = next-min-slack-time - current-slack-time.
+            if(next_proc) {
+                cur_time += cur_proc->slack - next_proc->slack + 1;
+                cur_proc->ret -= cur_proc->slack - next_proc->slack; //check this
+            }
+            else {
+                cur_time += cur_proc->ret;
+                cur_proc->ret = 0;
+
+            }
+            
             if(cur_proc->ret == 0) {
                 FILE *log_file = fopen("sched-op-lst.txt", "a+");
                 fprintf(log_file, "task: %d pid:%d aet: %d\n", cur_proc->task_id, cur_proc->pid, cur_proc->aet);
@@ -69,10 +85,8 @@ schedule_lst(pqueue *rdqueue, int nproc, int hyperperiod)
             }
         }
         //update slacks
-        cur_time++;
         update_slack(rdqueue, rdqueue->pq_size, cur_time);   
     }
-
 }
 
 pqueue *
@@ -89,7 +103,8 @@ submit_processes()
     while(fscanf(task_file, "%d, %d, %d", &wcet, &period, &deadline) == 3)
     {
         task *t = task_init(task_count++, wcet, period, deadline);
-        process *p = process_init(pid_count++, wcet, period, task_count, t);
+        process_init(int pid_v, int wcet_v, int priority_v, int task_id, task *task_ref);
+        process *p = process_init(pid_count++, wcet, deadline - wcet /*slack at t = 0*/, task_count, t);
         task_submit_job(t, p);
         global_tasks[task_no++] = t;
         pqueue_insert_process(ready_queue, p);
