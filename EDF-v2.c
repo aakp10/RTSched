@@ -75,7 +75,9 @@ schedule_edf(pqueue *rdqueue, int nproc, int hyperperiod)
             if(cur_proc->ret == 0)
             {
                 FILE *log_file = fopen("sched-op-edf.txt", "a+");
-                fprintf(log_file, "task: %d pid:%d aet: %d\n", cur_proc->task_id, cur_proc->pid, cur_proc->aet);
+                int response_time = cur_time - cur_proc->task_ref->next_release_time - cur_proc->task_ref->period; 
+                fprintf(log_file, "task: %d pid:%d aet: %d RESPONSE TIME: %d\n", cur_proc->task_id, cur_proc->pid,
+                            cur_proc->aet, response_time);
                 fclose(log_file);
                 pqueue_extract_process(rdqueue, cur_proc);
                 //current max prio job becomes the earliest deadline job
