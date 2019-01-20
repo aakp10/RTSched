@@ -65,4 +65,5 @@ void pqueue_display_process(pqueue *pq);
 void task_submit_job(task *cur_task, process *proc);
 task *task_init(int task_id, int et, int period, int deadline);
 void remove_job(task *t, process *p);
+void task_update_next_release(task *t);
 #endif
