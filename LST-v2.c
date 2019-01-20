@@ -21,7 +21,7 @@ arrival_list_find_position(int arr_time)
     struct arrival_list *head = anticipated_arrival;
     while(head && head->next)
     {
-        if(head->arr_time > arr_time)
+        if(head->arr_time >= arr_time)
             return head->before;
         head = head->next;
     }
@@ -34,9 +34,18 @@ arrival_list_add(int arr_time)
     struct arrival_list *temp_arrival = (struct arrival_list*)malloc(sizeof(struct arrival_list));
     temp_arrival->arr_time = arr_time;
     struct arrival_list *head = arrival_list_find_position(arr_time);
-    if (head && head->before) {
+    if (head) {
         temp_arrival->next = head;
+        if(head->arr_time >= arr_time) {
         temp_arrival->before = head->before;
+            temp_arrival->next = head;
+            temp_arrival->before = head->before;
+        }
+        else {
+            temp_arrival->next = head->next;
+            head->next = temp_arrival;
+            temp_arrival->before = head; 
+        }
     }
     else {
         anticipated_arrival = temp_arrival;
@@ -48,12 +57,13 @@ arrival_list_add(int arr_time)
 int
 get_next_arrival()
 {
-    return anticipated_arrival? anticipated_arrival->arr_time: 1<<32;
+    return anticipated_arrival? anticipated_arrival->arr_time: (1<<31) - 1;
 }
 
 void
 remove_next_arrival()
 {
+    if(anticipated_arrival)
     anticipated_arrival = anticipated_arrival->next;
 }
 
@@ -152,14 +162,16 @@ schedule_lst(pqueue *rdqueue, int nproc, int hyperperiod)
             int next_completion = cur_time + next_cpu_burst;
             //check if any new arrivals before consuming this cpu burst
             int next_arrival = get_next_arrival();
+            printf("next completion %d", next_completion);
+            printf("next arrival %d \n", next_arrival);
             if (next_completion < next_arrival) {
                 cur_proc->ret -= next_cpu_burst;
                 cur_time += next_cpu_burst;
             }
             else {
                 remove_next_arrival();
-                cur_proc->ret -= next_arrival;
-                cur_time += next_arrival;
+                cur_proc->ret -= next_arrival - cur_time;
+                cur_time = next_arrival;
             }
             //cur_time++;
             
@@ -170,12 +182,14 @@ schedule_lst(pqueue *rdqueue, int nproc, int hyperperiod)
                             cur_proc->aet, response_time);
                 fclose(log_file);
                 //updated anticipated_arrival list
-                anticipated_arrival_add(cur_proc->task_ref->next_release_time);
+                arrival_list_add(cur_proc->task_ref->next_release_time);
                 pqueue_extract_process(rdqueue, cur_proc);
                 //unlink from job lists
                 remove_job(cur_proc->task_ref, cur_proc);
             }
         }
+        else
+            cur_time++;
         //update slacks
         update_slack(rdqueue, rdqueue->pq_size, cur_time);   
     }
@@ -210,8 +224,7 @@ int main()
     pqueue *ready_queue = submit_processes();
     pqueue_display_process(ready_queue);
     printf("%d", get_lcm());
-    anticipated_arrival->arr_time = 0;
-    anticipated_arrival->before = anticipated_arrival->next = NULL;
+    anticipated_arrival = NULL;
     schedule_lst(ready_queue, task_count, get_lcm());
     return 0;
 }
