@@ -39,9 +39,14 @@ check_arrivals(pqueue *rdqueue, int cur_time, int nproc)
 {
     for(int i = 0; i < nproc; i++)
     {
-        if(global_tasks[i]->job_list == NULL && global_tasks[i]->deadline/*period*/ <= cur_time)
+        if(global_tasks[i]->job_list == NULL && global_tasks[i]->next_release_time/*period*/ <= cur_time)
         {
+            global_tasks[i]->next_release_time += global_tasks[i]->period;
+            //deadline is considered same as period
             global_tasks[i]->deadline += global_tasks[i]->deadline;
+            /*
+            global_tasks[i]->deadline += global_tasks[i]->period;
+            */
             process *p = process_init(pid_count++, global_tasks[i]->wcet, global_tasks[i]->period, 
                                 global_tasks[i]->task_id, global_tasks[i]);
             //FIXME :recreate the process this is reinsertion.

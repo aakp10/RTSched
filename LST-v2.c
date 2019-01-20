@@ -59,7 +59,11 @@ check_arrivals(pqueue *rdqueue, int cur_time, int nproc)
             //global_processes[i]->ret = global_processes[i]->et;
             //update release time
             global_tasks[i]->next_release_time += global_tasks[i]->period;
+            //deadline is considered same as period
             global_tasks[i]->deadline += global_tasks[i]->deadline;
+            /*
+            global_tasks[i]->deadline += global_tasks[i]->period;
+            */
             //recreate the process .
             process *p = process_init(pid_count++, global_tasks[i]->wcet,
                              global_tasks[i]->period, global_tasks[i]->task_id, global_tasks[i]);
