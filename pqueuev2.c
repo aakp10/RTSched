@@ -25,7 +25,7 @@ get_next_child(pqueue *rdqueue, int root_index)
     else if(r_child == rdqueue->pq_size)
         return rdqueue->ready[l_child];
     return rdqueue->ready[l_child]->priority < rdqueue->ready[r_child]->priority ?
-                        return rdqueue->ready[l_child] : rdqueue->ready[r_child];
+                        rdqueue->ready[l_child] : rdqueue->ready[r_child];
 }
 
 static int
@@ -200,6 +200,7 @@ task_init(int task_id, int wcet, int period, int deadline)
     temp->wcet = wcet;
     temp->period = period;
     temp->deadline = deadline;
+    temp->next_release_time = period;
     temp->job_list = NULL;
     return temp;
 }

@@ -17,6 +17,7 @@ struct task{
     int period;
     //absolute deadline
     int deadline;
+    int next_release_time;
     //this will just be 1 job per task at a given instance in the ready queue
     jobs *job_list;
 };
