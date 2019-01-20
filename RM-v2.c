@@ -6,6 +6,57 @@
 task **global_tasks;
 static int pid_count = 0;
 static int task_count = 0;
+
+struct arrival_list{
+    int arr_time;
+    struct arrival_list *next;
+    struct arrival_list *before;
+};
+
+static struct arrival_list* anticipated_arrival;
+
+struct arrival_list*
+arrival_list_find_position(int arr_time)
+{
+    struct arrival_list *head = anticipated_arrival;
+    while(head && head->next)
+    {
+        if(head->arr_time > arr_time)
+            return head->before;
+        head = head->next;
+    }
+    return head;
+}
+
+void
+arrival_list_add(int arr_time)
+{
+    struct arrival_list *temp_arrival = (struct arrival_list*)malloc(sizeof(struct arrival_list));
+    temp_arrival->arr_time = arr_time;
+    struct arrival_list *head = arrival_list_find_position(arr_time);
+    if (head && head->before) {
+        temp_arrival->next = head;
+        temp_arrival->before = head->before;
+    }
+    else {
+        anticipated_arrival = temp_arrival;
+        temp_arrival->next = head;
+        temp_arrival->before = NULL;
+    }
+}
+
+int
+get_next_arrival()
+{
+    return anticipated_arrival? anticipated_arrival->arr_time: 1<<32;
+}
+
+void
+remove_next_arrival()
+{
+    anticipated_arrival = anticipated_arrival->next;
+}
+
 int
 get_gcd(int num1, int num2)
 {
@@ -59,18 +110,28 @@ schedule_rm(pqueue *rdqueue, int nproc, int hyperperiod)
     while(cur_time <= hyperperiod)
    {
        //insert ready jobs from the global pool
-       check_arrivals(rdqueue, cur_time, nproc);
-       process *cur_proc = pqueue_get_max(rdqueue);
+        check_arrivals(rdqueue, cur_time, nproc);
+        process *cur_proc = pqueue_get_max(rdqueue);
         if(cur_proc) {
             FILE *schedule_file = fopen("schedule.txt", "a+");
             fprintf(schedule_file, "time:%d process executing: %d actual execution time = %d\n", cur_time, cur_proc->pid, cur_proc->aet);
             printf("time:%d process executing: %d actual execution time = %d\n", cur_time, cur_proc->pid, cur_proc->aet);
-            
+
             //insert release time all the getmax priority 
             fclose(schedule_file);
-            // if next_proc exists
-                cur_time += cur_proc->ret;
+            //sched point at min of arrival or completion
+            int next_completion = cur_proc->ret + cur_time;
+            int next_arrival = get_next_arrival();
+            
+            if (next_completion <= next_arrival) {
                 cur_proc->ret -= cur_proc->ret;
+                cur_time += cur_proc->ret;
+            }
+            else {
+                remove_next_arrival();
+                cur_proc->ret -= next_arrival;
+                cur_time += next_arrival;
+            }
             //global_task[cur_proc->pid-1]->ret--;
             if(cur_proc->ret == 0)
             {
@@ -81,14 +142,16 @@ schedule_rm(pqueue *rdqueue, int nproc, int hyperperiod)
                 fprintf(log_file, "task: %d pid:%d aet: %d RESPONSE TIME: %d\n", cur_proc->task_id, cur_proc->pid,
                             cur_proc->aet, response_time);
                 fclose(log_file);
+                //updated anticipated_arrival list
+                anticipated_arrival_add(cur_proc->task_ref->next_release_time);
                 pqueue_extract_process(rdqueue, cur_proc);
                 //unlink from job lists
                 remove_job(cur_proc->task_ref, cur_proc);
             }
             //once ret == et change the deadline to + hyperperiod
         }
-        //execute for 1 cycle
-        cur_time++;
+        //execute for 1 cycle—already handled
+        //cur_time++;
    }
 }
 
@@ -120,6 +183,8 @@ int main()
     pqueue *ready_queue = submit_processes();
     pqueue_display_process(ready_queue);
     printf("%d", get_lcm());
+    anticipated_arrival->arr_time = 0;
+    anticipated_arrival->before = anticipated_arrival->next = NULL;
     schedule_rm(ready_queue, task_count, get_lcm());
     return 0;
 }
