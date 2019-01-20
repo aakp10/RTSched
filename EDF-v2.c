@@ -6,7 +6,7 @@
 task **global_tasks;
 static int pid_count = 0;
 static int task_count = 0;
-int max_prio_next_release = 1<<32;
+int max_prio_next_release = (1<<30) - 1;
 
 struct arrival_list{
     int arr_time;
@@ -120,6 +120,8 @@ schedule_edf(pqueue *rdqueue, int nproc, int hyperperiod)
 {
     //execute until 1 hyperperiod
     int cur_time = 0;
+    int prev_task_id = -1;
+    int cur_task_id = -1;
     while(cur_time <= hyperperiod)
     {
         check_arrivals(rdqueue, cur_time, nproc);
@@ -166,6 +168,10 @@ schedule_edf(pqueue *rdqueue, int nproc, int hyperperiod)
         //execute for 1 cycle—already handled
         else
             cur_time++;
+        FILE *log_file = fopen("sched-op-lst.txt", "a+");
+        fprintf(log_file, "cache impact: %d", check_cache_impact(cur_task_id, prev_task_id));
+        fclose(log_file);
+        prev_task_id = cur_task_id;
         //once ret == et change the deadline to + hyperperiod
    }
 }
