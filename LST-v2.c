@@ -151,7 +151,13 @@ schedule_lst(pqueue *rdqueue, int nproc, int hyperperiod)
         process *cur_proc = pqueue_get_max(rdqueue);
         cur_task_id = cur_proc->task_id;
         if(cur_proc) {
-            printf("time:%d process executing: %d\n", cur_time, cur_proc->pid);
+            //printf("time:%d process executing: %d\n", cur_time, cur_proc->pid);
+            FILE *schedule_file = fopen("schedule.txt", "a+");
+            int laxity = cur_proc->task_ref->deadline - cur_time - cur_proc->ret;
+            fprintf(schedule_file, "time:%d process executing: %d actual execution time = %d laxity: %d\n", cur_time,
+                     cur_proc->pid, cur_proc->aet, laxity);
+            printf("time:%d process executing: %d actual execution time = %d laxity: %d\n", cur_time, cur_proc->pid, cur_proc->aet, laxity);
+            fclose(schedule_file);
             //find the next least slack time job
             process *next_proc = get_next_child(rdqueue, 0);
             //Processor claimed by the job for ∆ = next-min-slack-time - current-slack-time.

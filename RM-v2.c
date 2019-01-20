@@ -126,10 +126,9 @@ schedule_rm(pqueue *rdqueue, int nproc, int hyperperiod)
         process *cur_proc = pqueue_get_max(rdqueue);
         if(cur_proc) {
             FILE *schedule_file = fopen("schedule.txt", "a+");
-            fprintf(schedule_file, "time:%d process executing: %d actual execution time = %d\n", cur_time, cur_proc->pid, cur_proc->aet);
-            printf("time:%d process executing: %d actual execution time = %d\n", cur_time, cur_proc->pid, cur_proc->aet);
-
-            //insert release time all the getmax priority 
+            int laxity = cur_proc->task_ref->deadline - cur_time - cur_proc->ret;
+            fprintf(schedule_file, "time:%d process executing: %d actual execution time = %d laxity = %d \n", cur_time, cur_proc->pid, cur_proc->aet, laxity);
+            printf("time:%d process executing: %d actual execution time = %d laxity = %d\n", cur_time, cur_proc->pid, cur_proc->aet, laxity);
             fclose(schedule_file);
             //sched point at min of arrival or completion
             int next_completion = cur_proc->ret + cur_time;
