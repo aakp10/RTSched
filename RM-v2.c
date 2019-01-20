@@ -64,10 +64,8 @@ schedule_rm(pqueue *rdqueue, int nproc, int hyperperiod)
             //insert release time all the getmax priority 
             fclose(schedule_file);
             // if next_proc exists
-            if(next_proc) {
                 cur_time += cur_proc->ret;
                 cur_proc->ret -= cur_proc->ret;
-            }
             //global_task[cur_proc->pid-1]->ret--;
             if(cur_proc->ret == 0)
             {
