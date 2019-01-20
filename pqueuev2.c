@@ -234,3 +234,9 @@ remove_job(task *t, process *p)
         job_list = job_list->next_job;
     }
 }
+
+void
+task_update_next_release(task *t)
+{
+    t->next_release_time += t->period;
+}

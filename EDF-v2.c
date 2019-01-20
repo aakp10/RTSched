@@ -6,6 +6,7 @@
 task **global_tasks;
 static int pid_count = 0;
 static int task_count = 0;
+int max_prio_next_release = 1<<32;
 
 int
 get_gcd(int num1, int num2)
@@ -25,6 +26,12 @@ int get_lcm()
         hyper_period = (hyper_period * p2->period)/get_gcd(hyper_period, p2->period);
     }
     return hyper_period;
+}
+
+static void
+update_max_priority_next_release(task *t)
+{
+    max_prio_next_release = min(max_prio_next_release, t->next_release_time);
 }
 
 static void
@@ -55,15 +62,24 @@ schedule_edf(pqueue *rdqueue, int nproc, int hyperperiod)
         process *cur_proc = pqueue_get_max(rdqueue);
         if(cur_proc) {
             printf("time:%d process executing: %d\n", cur_time, cur_proc->pid);
-            //insert release time all the getmax priority 
-            //change ret
-            cur_proc->ret--;
+            //insert release time all the getmax priority
+            int max_cpu_burst = max_prio_next_release;
+            int cpu_burst = min(max_cpu_burst, cur_proc->ret);
+            cur_proc->ret -= cpu_burst;
+            cur_time += cpu_burst;
             if(cur_proc->ret == 0)
             {
                 FILE *log_file = fopen("sched-op-edf.txt", "a+");
                 fprintf(log_file, "task: %d pid:%d aet: %d\n", cur_proc->task_id, cur_proc->pid, cur_proc->aet);
                 fclose(log_file);
                 pqueue_extract_process(rdqueue, cur_proc);
+                //current max prio job becomes the earliest deadline job
+                max_prio_next_release = pqueue_get_max(rdqueue)->task_ref->deadline;
+                //update next release time—maybe this gets released again before the complete execution
+                //and it needs to be preempted to check the current prio status of deadlines.
+                task_update_next_release(cur_proc->task_ref);
+                //recalculate the max priority next release time
+                update_max_priority_next_release(cur_proc->task_ref);
                 //unlink from job lists
                 remove_job(cur_proc->task_ref, cur_proc);
             }
@@ -89,7 +105,8 @@ submit_processes()
     while(fscanf(task_file, "%d, %d, %d", &wcet, &period, &deadline) == 3)
     {
         task *t = task_init(task_count++, wcet, period, deadline);
-        process *p = process_init(pid_count++, wcet, period, task_count, t);
+        process *p = process_init(pid_count++, wcet, deadline, task_count, t);
+        max_prio_next_release = min(t->next_release_time, max_prio_next_release);
         task_submit_job(t, p);
         global_tasks[task_no++] = t;
         pqueue_insert_process(ready_queue, p);
