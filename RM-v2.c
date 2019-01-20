@@ -123,7 +123,7 @@ schedule_rm(pqueue *rdqueue, int nproc, int hyperperiod)
             int next_completion = cur_proc->ret + cur_time;
             int next_arrival = get_next_arrival();
             
-            if (next_completion <= next_arrival) {
+            if (next_completion < next_arrival) {
                 cur_proc->ret -= cur_proc->ret;
                 cur_time += cur_proc->ret;
             }
