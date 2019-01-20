@@ -240,3 +240,12 @@ task_update_next_release(task *t)
 {
     t->next_release_time += t->period;
 }
+
+cache
+check_cache_impact(int cur_task_id, int prev_task_id)
+{
+    if(cur_task_id == prev_task_id)
+        return NO_CACHE_IMPACT;
+    else
+        return CACHE_IMPACT;
+}

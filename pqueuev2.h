@@ -48,6 +48,13 @@ struct pqueue{
     int pq_size;
 };
 
+typedef enum _cache cache;
+enum _cache{
+    NO_CACHE_IMPACT,
+    CACHE_IMPACT,
+    NUM_STATES
+};
+
 // some helpers
 
 process* get_next_child(pqueue *rdqueue, int root_index);
@@ -66,4 +73,5 @@ void task_submit_job(task *cur_task, process *proc);
 task *task_init(int task_id, int et, int period, int deadline);
 void remove_job(task *t, process *p);
 void task_update_next_release(task *t);
+cache check_cache_impact(int cur_task_id, int prev_task_id);
 #endif
