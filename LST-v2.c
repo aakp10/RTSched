@@ -7,6 +7,56 @@ task **global_tasks;
 static int pid_count = 0;
 static int task_count = 0;
 
+struct arrival_list{
+    int arr_time;
+    struct arrival_list *next;
+    struct arrival_list *before;
+};
+
+static struct arrival_list* anticipated_arrival;
+
+struct arrival_list*
+arrival_list_find_position(int arr_time)
+{
+    struct arrival_list *head = anticipated_arrival;
+    while(head && head->next)
+    {
+        if(head->arr_time > arr_time)
+            return head->before;
+        head = head->next;
+    }
+    return head;
+}
+
+void
+arrival_list_add(int arr_time)
+{
+    struct arrival_list *temp_arrival = (struct arrival_list*)malloc(sizeof(struct arrival_list));
+    temp_arrival->arr_time = arr_time;
+    struct arrival_list *head = arrival_list_find_position(arr_time);
+    if (head && head->before) {
+        temp_arrival->next = head;
+        temp_arrival->before = head->before;
+    }
+    else {
+        anticipated_arrival = temp_arrival;
+        temp_arrival->next = head;
+        temp_arrival->before = NULL;
+    }
+}
+
+int
+get_next_arrival()
+{
+    return anticipated_arrival? anticipated_arrival->arr_time: 1<<32;
+}
+
+void
+remove_next_arrival()
+{
+    anticipated_arrival = anticipated_arrival->next;
+}
+
 int
 get_gcd(int num1, int num2)
 {
@@ -91,16 +141,27 @@ schedule_lst(pqueue *rdqueue, int nproc, int hyperperiod)
             //find the next least slack time job
             process *next_proc = get_next_child(rdqueue, 0);
             //Processor claimed by the job for ∆ = next-min-slack-time - current-slack-time.
+            int next_cpu_burst;
             if(next_proc) {
-                cur_time += cur_proc->slack - next_proc->slack + 1;
-                cur_proc->ret -= cur_proc->slack - next_proc->slack + 1; //check this
+                next_cpu_burst = cur_proc->slack - next_proc->slack + 1;
             }
             else {
-                cur_time += cur_proc->ret;
-                cur_proc->ret = 0;
-
+                next_cpu_burst = cur_proc->ret;
             }
-            cur_time++;
+            
+            int next_completion = cur_time + next_cpu_burst;
+            //check if any new arrivals before consuming this cpu burst
+            int next_arrival = get_next_arrival();
+            if (next_completion < next_arrival) {
+                cur_proc->ret -= next_cpu_burst;
+                cur_time += next_cpu_burst;
+            }
+            else {
+                remove_next_arrival();
+                cur_proc->ret -= next_arrival;
+                cur_time += next_arrival;
+            }
+            //cur_time++;
             
             if(cur_proc->ret == 0) {
                 FILE *log_file = fopen("sched-op-lst.txt", "a+");
@@ -108,6 +169,8 @@ schedule_lst(pqueue *rdqueue, int nproc, int hyperperiod)
                 fprintf(log_file, "task: %d pid:%d aet: %d RESPONSE TIME: %d\n", cur_proc->task_id, cur_proc->pid,
                             cur_proc->aet, response_time);
                 fclose(log_file);
+                //updated anticipated_arrival list
+                anticipated_arrival_add(cur_proc->task_ref->next_release_time);
                 pqueue_extract_process(rdqueue, cur_proc);
                 //unlink from job lists
                 remove_job(cur_proc->task_ref, cur_proc);
@@ -147,6 +210,8 @@ int main()
     pqueue *ready_queue = submit_processes();
     pqueue_display_process(ready_queue);
     printf("%d", get_lcm());
+    anticipated_arrival->arr_time = 0;
+    anticipated_arrival->before = anticipated_arrival->next = NULL;
     schedule_lst(ready_queue, task_count, get_lcm());
     return 0;
 }
