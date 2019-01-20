@@ -141,6 +141,7 @@ schedule_lst(pqueue *rdqueue, int nproc, int hyperperiod)
     int cur_time = 0;
     int prev_task_id = -1;
     int cur_task_id = -1;
+    int cpu_idle_time = 0;
     while(cur_time <= hyperperiod)
     {
         /**
@@ -191,8 +192,10 @@ schedule_lst(pqueue *rdqueue, int nproc, int hyperperiod)
                 remove_job(cur_proc->task_ref, cur_proc);
             }
         }
-        else
+        else {
             cur_time++;
+            cpu_idle_time++;
+        }
         FILE *log_file = fopen("sched-op-lst.txt", "a+");
             fprintf(log_file, "cache impact: %d", check_cache_impact(cur_task_id, prev_task_id));
         fclose(log_file);
@@ -200,6 +203,9 @@ schedule_lst(pqueue *rdqueue, int nproc, int hyperperiod)
         //update slacks
         update_slack(rdqueue, rdqueue->pq_size, cur_time);   
     }
+    FILE *log_file = fopen("sched-op-lst.txt", "a+");
+    fprintf(log_file, "cpu idle time %d cpu time utilized %d/%d", cpu_idle_time, hyperperiod - cpu_idle_time, hyperperiod);
+    fclose(log_file);
 }
 
 pqueue *
