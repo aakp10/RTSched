@@ -22,7 +22,7 @@ arrival_list_find_position(int arr_time)
     struct arrival_list *head = anticipated_arrival;
     while(head && head->next)
     {
-        if(head->arr_time > arr_time)
+        if(head->arr_time >= arr_time)
             return head->before;
         head = head->next;
     }
@@ -35,9 +35,17 @@ arrival_list_add(int arr_time)
     struct arrival_list *temp_arrival = (struct arrival_list*)malloc(sizeof(struct arrival_list));
     temp_arrival->arr_time = arr_time;
     struct arrival_list *head = arrival_list_find_position(arr_time);
-    if (head && head->before) {
+    if (head) {
         temp_arrival->next = head;
-        temp_arrival->before = head->before;
+        if(head->arr_time >= arr_time) {
+            temp_arrival->before = head->before;
+            temp_arrival->next = head;
+        }
+        else {
+            temp_arrival->next = head->next;
+            head->next = temp_arrival;
+            temp_arrival->before = head; 
+        }
     }
     else {
         anticipated_arrival = temp_arrival;
@@ -49,7 +57,8 @@ arrival_list_add(int arr_time)
 int
 get_next_arrival()
 {
-    return anticipated_arrival? anticipated_arrival->arr_time: 1<<32;
+    if (anticipated_arrival)
+    return anticipated_arrival? anticipated_arrival->arr_time: (1<<31) - 1;
 }
 
 void
@@ -121,15 +130,16 @@ schedule_edf(pqueue *rdqueue, int nproc, int hyperperiod)
             //sched point at min of arrival or completion
             int next_completion = cur_proc->ret + cur_time;
             int next_arrival = get_next_arrival();
-            
+            printf("Next Completion %d Next Arrival %d\n", next_completion, next_arrival);
+                       
             if (next_completion < next_arrival) {
-                cur_proc->ret -= cur_proc->ret;
                 cur_time += cur_proc->ret;
+                cur_proc->ret -= cur_proc->ret;
             }
             else {
                 remove_next_arrival();
-                cur_proc->ret -= next_arrival;
-                cur_time += next_arrival;
+                cur_proc->ret -= next_arrival - cur_time;
+                cur_time = next_arrival;
             }
             if(cur_proc->ret == 0)
             {
@@ -139,7 +149,7 @@ schedule_edf(pqueue *rdqueue, int nproc, int hyperperiod)
                             cur_proc->aet, response_time);
                 fclose(log_file);
                 //updated anticipated_arrival list
-                anticipated_arrival_add(cur_proc->task_ref->next_release_time);
+                arrival_list_add(cur_proc->task_ref->next_release_time);
                 pqueue_extract_process(rdqueue, cur_proc);
                 //current max prio job becomes the earliest deadline job
                 max_prio_next_release = pqueue_get_max(rdqueue)->task_ref->deadline;
@@ -154,7 +164,8 @@ schedule_edf(pqueue *rdqueue, int nproc, int hyperperiod)
                 
         }
         //execute for 1 cycle—already handled
-        //cur_time++;
+        else
+            cur_time++;
         //once ret == et change the deadline to + hyperperiod
    }
 }
@@ -188,8 +199,7 @@ int main()
     pqueue *ready_queue = submit_processes();
     pqueue_display_process(ready_queue);
     printf("%d", get_lcm());
-    anticipated_arrival->arr_time = 0;
-    anticipated_arrival->before = anticipated_arrival->next = NULL;
+    anticipated_arrival = NULL;
     schedule_edf(ready_queue, task_count, get_lcm());
     return 0;
 }
