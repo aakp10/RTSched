@@ -6,7 +6,7 @@
 task **global_tasks;
 static int pid_count = 0;
 static int task_count = 0;
-int max_prio_next_release = 1<<32;
+int max_prio_next_release = (1<<30) - 1;
 
 struct arrival_list{
     int arr_time;
@@ -115,12 +115,20 @@ schedule_edf(pqueue *rdqueue, int nproc, int hyperperiod)
 {
     //execute until 1 hyperperiod
     int cur_time = 0;
+    int prev_task_id = -1;
+    int cur_task_id = -1;
+    int cpu_idle_time = 0;
     while(cur_time <= hyperperiod)
     {
         check_arrivals(rdqueue, cur_time, nproc);
         process *cur_proc = pqueue_get_max(rdqueue);
         if(cur_proc) {
-            printf("time:%d process executing: %d\n", cur_time, cur_proc->pid);
+            //printf("time:%d process executing: %d\n", cur_time, cur_proc->pid);
+            FILE *schedule_file = fopen("schedule.txt", "a+");
+            int laxity = cur_proc->task_ref->deadline - cur_time - cur_proc->ret;
+            fprintf(schedule_file, "time:%d process executing: %d actual execution time = %d laxity = %d\n", cur_time, cur_proc->pid, cur_proc->aet, laxity);
+            printf("time:%d process executing: %d actual execution time = %d laxity: %d\n", cur_time, cur_proc->pid, cur_proc->aet, laxity);
+            fclose(schedule_file);
             //insert release time all the getmax priority
             //sched point at min of arrival or completion
             int next_completion = cur_proc->ret + cur_time;
@@ -157,10 +165,19 @@ schedule_edf(pqueue *rdqueue, int nproc, int hyperperiod)
                 
         }
         //execute for 1 cycle—already handled
-        else
+        else {
             cur_time++;
+            cpu_idle_time++;
+        }
+        FILE *log_file = fopen("sched-op-lst.txt", "a+");
+        fprintf(log_file, "cache impact: %d", check_cache_impact(cur_task_id, prev_task_id));
+        fclose(log_file);
+        prev_task_id = cur_task_id;
         //once ret == et change the deadline to + hyperperiod
    }
+    FILE *log_file = fopen("sched-op-lst.txt", "a+");
+    fprintf(log_file, "cpu idle time %d cpu time utilized %d/%d", cpu_idle_time, hyperperiod - cpu_idle_time, hyperperiod);
+    fclose(log_file);
 }
 
 pqueue *

@@ -57,7 +57,7 @@ arrival_list_add(int arr_time)
 int
 get_next_arrival()
 {
-    return anticipated_arrival? anticipated_arrival->arr_time: (1<<31) - 1;
+    return anticipated_arrival? anticipated_arrival->arr_time: (1<<30) - 1;
 }
 
 void
@@ -120,7 +120,7 @@ check_arrivals(pqueue *rdqueue, int cur_time, int nproc)
             //update release time
             global_tasks[i]->next_release_time += global_tasks[i]->period;
             //deadline is considered same as period
-            global_tasks[i]->deadline += global_tasks[i]->deadline;
+            global_tasks[i]->deadline += global_tasks[i]->period;
             /*
             global_tasks[i]->deadline += global_tasks[i]->period;
             */
@@ -139,6 +139,9 @@ void
 schedule_lst(pqueue *rdqueue, int nproc, int hyperperiod)
 {
     int cur_time = 0;
+    int prev_task_id = -1;
+    int cur_task_id = -1;
+    int cpu_idle_time = 0;
     while(cur_time <= hyperperiod)
     {
         /**
@@ -146,14 +149,21 @@ schedule_lst(pqueue *rdqueue, int nproc, int hyperperiod)
         */
         check_arrivals(rdqueue, cur_time, nproc);
         process *cur_proc = pqueue_get_max(rdqueue);
+        cur_task_id = cur_proc->task_id;
         if(cur_proc) {
-            printf("time:%d process executing: %d\n", cur_time, cur_proc->pid);
+            //printf("time:%d process executing: %d\n", cur_time, cur_proc->pid);
+            FILE *schedule_file = fopen("schedule.txt", "a+");
+            int laxity = cur_proc->task_ref->deadline - cur_time - cur_proc->ret;
+            fprintf(schedule_file, "time:%d process executing: %d actual execution time = %d laxity: %d\n", cur_time,
+                     cur_proc->pid, cur_proc->aet, laxity);
+            printf("time:%d process executing: %d actual execution time = %d laxity: %d\n", cur_time, cur_proc->pid, cur_proc->aet, laxity);
+            fclose(schedule_file);
             //find the next least slack time job
             process *next_proc = get_next_child(rdqueue, 0);
             //Processor claimed by the job for ∆ = next-min-slack-time - current-slack-time.
             int next_cpu_burst;
             if(next_proc) {
-                next_cpu_burst = cur_proc->slack - next_proc->slack + 1;
+                next_cpu_burst = next_proc->slack - cur_proc->slack + 1;
             }
             else {
                 next_cpu_burst = cur_proc->ret;
@@ -178,7 +188,7 @@ schedule_lst(pqueue *rdqueue, int nproc, int hyperperiod)
             if(cur_proc->ret == 0) {
                 FILE *log_file = fopen("sched-op-lst.txt", "a+");
                 int response_time = cur_time - cur_proc->task_ref->next_release_time - cur_proc->task_ref->period; 
-                fprintf(log_file, "task: %d pid:%d aet: %d RESPONSE TIME: %d\n", cur_proc->task_id, cur_proc->pid,
+                fprintf(log_file, "task: %d pid:%d aet: %d RESPONSE TIME: %d ", cur_proc->task_id, cur_proc->pid,
                             cur_proc->aet, response_time);
                 fclose(log_file);
                 //updated anticipated_arrival list
@@ -188,17 +198,26 @@ schedule_lst(pqueue *rdqueue, int nproc, int hyperperiod)
                 remove_job(cur_proc->task_ref, cur_proc);
             }
         }
-        else
+        else {
             cur_time++;
+            cpu_idle_time++;
+        }
+        FILE *log_file = fopen("sched-op-lst.txt", "a+");
+            fprintf(log_file, "cache impact: %d", check_cache_impact(cur_task_id, prev_task_id));
+        fclose(log_file);
+        prev_task_id = cur_task_id;
         //update slacks
         update_slack(rdqueue, rdqueue->pq_size, cur_time);   
     }
+    FILE *log_file = fopen("sched-op-lst.txt", "a+");
+    fprintf(log_file, "cpu idle time %d cpu time utilized %d/%d", cpu_idle_time, hyperperiod - cpu_idle_time, hyperperiod);
+    fclose(log_file);
 }
 
 pqueue *
 submit_processes()
 {
-    FILE *task_file = fopen("tasks-edf", "r");
+    FILE *task_file = fopen("tasks", "r");
     int wcet, period, deadline;
     int task_no = 0;
     int process_count;
